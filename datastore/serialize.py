@@ -1,14 +1,13 @@
-
-
 import json
-from basic import Datastore, ShimDatastore
+from .basic import Datastore, ShimDatastore
+
 
 default_serializer = json
 
 
-
 class Serializer(object):
   '''Serializing protocol. Serialized data must be a string.'''
+
   @classmethod
   def loads(cls, value):
     '''returns deserialized `value`.'''
@@ -25,7 +24,6 @@ class Serializer(object):
        and hasattr(cls, 'dumps') and callable(cls.dumps)
 
 
-
 class NonSerializer(Serializer):
   '''Implements serializing protocol but does not serialize at all.
   If only storing strings (or already-serialized values).
@@ -39,7 +37,6 @@ class NonSerializer(Serializer):
   def dumps(cls, value):
     '''returns `value`.'''
     return value
-
 
 
 class prettyjson(Serializer):
@@ -74,7 +71,6 @@ class Stack(Serializer, list):
     return value
 
 
-
 class map_serializer(Serializer):
   '''map serializer that ensures the serialized value is a mapping type.'''
 
@@ -95,18 +91,16 @@ class map_serializer(Serializer):
     return value
 
 
-
-
 def deserialized_gen(serializer, iterable):
   '''Generator that yields deserialized objects from `iterable`.'''
   for item in iterable:
     yield serializer.loads(item)
 
+
 def serialized_gen(serializer, iterable):
   '''Generator that yields serialized objects from `iterable`.'''
   for item in iterable:
     yield serializer.dumps(item)
-
 
 
 def monkey_patch_bson(bson=None):
@@ -119,7 +113,6 @@ def monkey_patch_bson(bson=None):
 
   if not hasattr(bson, 'dumps'):
     bson.dumps = lambda document: bson.BSON.encode(document)
-
 
 
 class SerializerShimDatastore(ShimDatastore):
@@ -159,7 +152,6 @@ class SerializerShimDatastore(ShimDatastore):
     errstr = 'Serializer error: serialized value does not match original'
     assert self.serializer.loads(self.serializer.dumps(test)) == test, errstr
 
-
   def serializedValue(self, value):
     '''Returns serialized `value` or None.'''
     return self.serializer.dumps(value) if value is not None else None
@@ -167,7 +159,6 @@ class SerializerShimDatastore(ShimDatastore):
   def deserializedValue(self, value):
     '''Returns deserialized `value` or None.'''
     return self.serializer.loads(value) if value is not None else None
-
 
   def get(self, key):
     '''Return the object named by key or None if it does not exist.
@@ -219,7 +210,6 @@ class SerializerShimDatastore(ShimDatastore):
     cursor._iterable = deserialized_gen(self.serializer, cursor._iterable)
 
     return cursor
-
 
 
 def shim(datastore, serializer=None):
