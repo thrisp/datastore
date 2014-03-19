@@ -187,7 +187,6 @@ class TestFilter(TestQuery):
         self.assertFilter(feqt3, vs, [v3])
 
     def test_none(self):
-        # test query against None
         feqnone = Filter('val', '=', None)
         vs = [{'val': None}, {'val': 'something'}]
         self.assertFilter(feqnone, vs, vs[0:1])
@@ -207,13 +206,13 @@ class TestFilter(TestQuery):
 
         self.assertEqual(f1, eval(repr(f1)))
         self.assertEqual(f2, eval(repr(f2)))
-        #self.assertEqual(f3, eval(repr(f3)))
-        #self.assertEqual(f4, eval(repr(f4)))
+        self.assertEqual(f3.op, eval(repr(f3)).op)
+        self.assertEqual(f4.value.nanoseconds(), eval(repr(f4)).value.nanoseconds())
 
         self.assertEqual(str(f1), 'key > /A')
         self.assertEqual(str(f2), 'key < /A')
-        self.assertEqual(str(f3), 'committed = %s' % t1)
-        self.assertEqual(str(f4), 'committed >= %s' % t2)
+        self.assertEqual(str(f3), 'committed = {}'.format(t1))
+        self.assertEqual(str(f4), 'committed >= {}'.format(t2))
 
         self.assertEqual(f1, Filter('key', '>', '/A'))
         self.assertEqual(f2, Filter('key', '<', '/A'))
@@ -238,23 +237,23 @@ class TestFilter(TestQuery):
 
 class TestOrder(TestQuery):
     def test_basic(self):
-        #o1 = Order('key')
+        with self.assertRaises(ValueError):
+            Order('key')
+        o1 = Order('+key')
         o2 = Order('+committed')
         o3 = Order('-created')
 
         v1, v2, v3 = self.version_objects()
 
-        # test  isAscending
-        #self.assertTrue(o1.isAscending())
-        self.assertTrue(o2.isAscending)
-        self.assertFalse(o3.isAscending)
+        self.assertFalse(o1.descending)
+        self.assertFalse(o2.descending)
+        self.assertTrue(o3.descending)
 
-        # test keyfn
-        #self.assertEqual(o1.keyfn(v1), (v1['key']))
-        #self.assertEqual(o1.keyfn(v2), (v2['key']))
-        #self.assertEqual(o1.keyfn(v3), (v3['key']))
-        #self.assertEqual(o1.keyfn(v1), (v2['key']))
-        #self.assertEqual(o1.keyfn(v1), (v3['key']))
+        self.assertEqual(o1.keyfn(v1), (v1['key']))
+        self.assertEqual(o1.keyfn(v2), (v2['key']))
+        self.assertEqual(o1.keyfn(v3), (v3['key']))
+        self.assertEqual(o1.keyfn(v1), (v2['key']))
+        self.assertEqual(o1.keyfn(v1), (v3['key']))
 
         self.assertEqual(o2.keyfn(v1),    (v1['committed']))
         self.assertEqual(o2.keyfn(v2),    (v2['committed']))
@@ -268,39 +267,34 @@ class TestOrder(TestQuery):
         self.assertNotEqual(o3.keyfn(v1), (v2['created']))
         self.assertNotEqual(o3.keyfn(v1), (v3['created']))
 
-        # test sorted
-        #self.assertEqual(Order.osorted([v3, v2, v1], [o1]), [v3, v2, v1])
-        #self.assertEqual(Order.osorted([v3, v2, v1], [o1, o2]), [v1, v2, v3])
-        #self.assertEqual(Order.osorted([v1, v3, v2], [o1, o3]), [v3, v2, v1])
-        #self.assertEqual(Order.osorted([v3, v2, v1], [o1, o2, o3]), [v1, v2, v3])
-        #self.assertEqual(Order.osorted([v1, v3, v2], [o1, o3, o2]), [v3, v2, v1])
-
-        #self.assertEqual(Order.osorted([v3, v2, v1], [o2]), [v1, v2, v3])
-        #self.assertEqual(Order.osorted([v3, v2, v1], [o2, o1]), [v1, v2, v3])
-        #self.assertEqual(Order.osorted([v3, v2, v1], [o2, o3]), [v1, v2, v3])
-        #self.assertEqual(Order.osorted([v3, v2, v1], [o2, o1, o3]), [v1, v2, v3])
-        #self.assertEqual(Order.osorted([v3, v2, v1], [o2, o3, o1]), [v1, v2, v3])
-
-        #self.assertEqual(Order.osorted([v1, v2, v3], [o3]), [v3, v2, v1])
-        #self.assertEqual(Order.osorted([v1, v2, v3], [o3, o2]), [v3, v2, v1])
-        #self.assertEqual(Order.osorted([v1, v2, v3], [o3, o1]), [v3, v2, v1])
-        #self.assertEqual(Order.osorted([v1, v2, v3], [o3, o2, o1]), [v3, v2, v1])
-        #self.assertEqual(Order.osorted([v1, v2, v3], [o3, o1, o2]), [v3, v2, v1])
+        # modernizing code has made Order less robust, for now.
+        self.assertEqual(Order.sort_orders([v3, v2, v1], [o1]), [v3, v2, v1])
+        self.assertEqual(Order.sort_orders([v3, v2, v1], [o1, o2]), [v1, v2, v3])
+        self.assertEqual(Order.sort_orders([v1, v3, v2], [o1, o3]), [v3, v2, v1])
+        #self.assertEqual(Order.sort_orders([v3, v2, v1], [o1, o2, o3]), [v1, v2, v3])
+        #self.assertEqual(Order.sort_orders([v1, v3, v2], [o1, o3, o2]), [v3, v2, v1])
+        self.assertEqual(Order.sort_orders([v3, v2, v1], [o2]), [v1, v2, v3])
+        self.assertEqual(Order.sort_orders([v3, v2, v1], [o2, o1]), [v1, v2, v3])
+        #self.assertEqual(Order.sort_orders([v3, v2, v1], [o2, o3]), [v1, v2, v3])
+        #self.assertEqual(Order.sort_orders([v3, v2, v1], [o2, o1, o3]), [v1, v2, v3])
+        #self.assertEqual(Order.sort_orders([v3, v2, v1], [o2, o3, o1]), [v1, v2, v3])
+        self.assertEqual(Order.sort_orders([v1, v2, v3], [o3]), [v3, v2, v1])
+        #self.assertEqual(Order.sort_orders([v1, v2, v3], [o3, o2]), [v3, v2, v1])
+        self.assertEqual(Order.sort_orders([v1, v2, v3], [o3, o1]), [v3, v2, v1])
+        #self.assertEqual(Order.sort_orders([v1, v2, v3], [o3, o2, o1]), [v3, v2, v1])
+        #self.assertEqual(Order.sort_orders([v1, v2, v3], [o3, o1, o2]), [v3, v2, v1])
 
     def test_object(self):
-        #self.assertEqual(Order('key'), eval(repr(Order('key'))))
         self.assertEqual(Order('+committed'), eval(repr(Order('+committed'))))
         self.assertEqual(Order('-created'), eval(repr(Order('-created'))))
 
-        #self.assertEqual(str(Order('key')), '+key')
+        self.assertEqual(str(Order('+key')), '+key')
         self.assertEqual(str(Order('+committed')), '+committed')
         self.assertEqual(str(Order('-created')), '-created')
 
-        #self.assertEqual(Order('key'), Order('+key'))
         self.assertEqual(Order('-key'), Order('-key'))
         self.assertEqual(Order('+committed'), Order('+committed'))
 
-        #self.assertNotEqual(Order('key'), Order('-key'))
         self.assertNotEqual(Order('+key'), Order('-key'))
         self.assertNotEqual(Order('+committed'), Order('+key'))
 
@@ -322,34 +316,33 @@ class TestQueries(TestQuery):
         q1.offset = 300
         q3.limit = 1
 
-        q1.filter('key', '>', '/ABC')
-        q1.filter('created', '>', now)
+        q1.add_filter('key', '>', '/ABC')
+        q1.add_filter('created', '>', now)
 
-        #q2.order('key')
-        q2.order('-created')
+        q2.add_order('+key')
+        q2.add_order('-created')
 
-        q1d = {'key': '/', 'limit':100, 'offset':300, \
-        'filter': [['key', '>', '/ABC'], ['created', '>', now]] }
+        q1d = {'key': '/', 'limit':100, 'offset':300, 'filter': [['key', '>', '/ABC'], ['created', '>', now]] }
 
-        q2d = {'key': '/', 'offset':200, 'order': ['-created'] }
+        q2d = {'key': '/', 'offset':200, 'order': ['+key', '-created'] }
 
         q3d = {'key': '/', 'limit':1}
 
-        self.assertEqual(q1.dict(), q1d)
-        self.assertEqual(q2.dict(), q2d)
-        self.assertEqual(q3.dict(), q3d)
+        self.assertEqual(q1.to_dict(), q1d)
+        self.assertEqual(q2.to_dict(), q2d)
+        self.assertEqual(q3.to_dict(), q3d)
 
-        #self.assertEqual(q1, Query.from_dict(q1d))
-        #self.assertEqual(q2, Query.from_dict(q2d))
-        #self.assertEqual(q3, Query.from_dict(q3d))
+        self.assertEqual(q1.limit, Query.from_dict(q1d).limit)
+        self.assertEqual(q2.orders, Query.from_dict(q2d).orders)
+        self.assertEqual(q3.key, Query.from_dict(q3d).key)
 
-        #self.assertEqual(q1, eval(repr(q1)))
-        #self.assertEqual(q2, eval(repr(q2)))
-        #self.assertEqual(q3, eval(repr(q3)))
+        self.assertEqual(q1.limit, eval(repr(q1)).limit)
+        self.assertEqual(q2.orders, eval(repr(q2)).orders)
+        self.assertEqual(q3.key, eval(repr(q3)).key)
 
-        #self.assertEqual(q1, q1.copy())
-        #self.assertEqual(q2, q2.copy())
-        #self.assertEqual(q3, q3.copy())
+        self.assertEqual(q1.limit, q1.copy().limit)
+        self.assertEqual(q2.orders, q2.copy().orders)
+        self.assertEqual(q3.key, q3.copy().key)
 
     def subtest_cursor(self, query, iterable, expected_results):
         self.assertRaises(ValueError, Cursor, None, None)
@@ -389,7 +382,7 @@ class TestQueries(TestQuery):
         self.assertRaises(ValueError, Cursor, None, None)
         self.assertRaises(ValueError, Cursor, Query(Key('/')), None)
         self.assertRaises(ValueError, Cursor, None, [1])
-        c = Cursor(Query(k), [1, 2, 3, 4, 5]) # should not raise
+        c = Cursor(Query(k), [1, 2, 3, 4, 5])
 
         self.assertEqual(c.skipped, 0)
         self.assertEqual(c.returned, 0)
@@ -428,12 +421,12 @@ class TestQueries(TestQuery):
         self.subtest_cursor(Query(k, offset=1), vs, [v2, v3])
         self.subtest_cursor(Query(k, offset=1, limit=1), vs, [v2])
 
-        self.subtest_cursor(Query(k).filter('committed', '>=', t2), vs, [v2, v3])
-        self.subtest_cursor(Query(k).filter('committed', '<=', t1), vs, [v1])
+        self.subtest_cursor(Query(k).add_filter('committed', '>=', t2), vs, [v2, v3])
+        self.subtest_cursor(Query(k).add_filter('committed', '<=', t1), vs, [v1])
 
-        #self.subtest_cursor(Query(k).order('+committed'), vs, [v1, v2, v3])
-        #self.subtest_cursor(Query(k).order('-created'), vs, [v3, v2, v1])
+        self.subtest_cursor(Query(k).add_order('+committed'), vs, [v1, v2, v3])
+        self.subtest_cursor(Query(k).add_order('-created'), vs, [v3, v2, v1])
 
 
 if __name__ == '__main__':
-  unittest.main()
+    unittest.main()

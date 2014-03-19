@@ -1,51 +1,47 @@
-from functools import cmp_to_key
+from copy import copy
+from functools import total_ordering
+from operator import itemgetter
+
 from .key import Key
 
 
 def _object_getattr(obj, field):
     """Attribute getter for the objects to operate on.
 
-    This function can be overridden in classes or instances of Query, Filter, and
+    This function can be overridden in classes or instances of Query, Filter, or
     Order. Thus, a custom function to extract values to attributes can be
     specified, and the system can remain agnostic to the client's data model,
-    without loosing query power.
+    without losing query power.
 
-    For example, the default implementation works with attributes and items::
+    For example, the default implementation works with attributes and items:
 
         def _object_getattr(obj, field):
-        # check whether this key is an attribute
-        if hasattr(obj, field):
-            value = getattr(obj, field)
+            # check whether this key is an attribute
+            if hasattr(obj, field):
+                value = getattr(obj, field)
 
-        # if not, perhaps it is an item (raw dicts, etc)
-        elif field in obj:
-            value = obj[field]
+            # if not, perhaps it is an item (raw dicts, etc)
+            elif field in obj:
+                value = obj[field]
 
-        # return whatever we've got.
-        return value
+            # return whatever we've got.
+            return value
 
-    Or consider a more complex, application-specific structure::
+    Or consider a more application-specific use-case:
 
         def _object_getattr(version, field):
-
-        if field in ['key', 'committed', 'created', 'hash']:
-            return getattr(version, field)
-
-        else:
-            return version.attributes[field]['value']
+            if field in ['key', 'committed', 'created', 'hash']:
+                return getattr(version, field)
+            else:
+                return version.attributes[field]['value']
     """
-    # TODO: consider changing this to raise an exception if no value is found.
     value = None
 
-    # check whether this key is an attribute
     if hasattr(obj, field):
         value = getattr(obj, field)
-
-    # if not, perhaps it is an item (raw dicts, etc)
     elif field in obj:
         value = obj[field]
 
-    # return whatever we've got.
     return value
 
 
@@ -62,8 +58,8 @@ def limit_gen(limit, iterable):
 
 
 def offset_gen(offset, iterable, skip_signal=None):
-    """A generator that applies an `offset`, skipping `offset` elements from
-    `iterable`. If skip_signal is a callable, it will be called with every
+    """A generator that applies an offset, skipping offset elements from
+    iterable. If skip_signal is a callable, it will be called with every
     skipped element.
     """
     offset = int(offset)
@@ -79,7 +75,7 @@ def offset_gen(offset, iterable, skip_signal=None):
 
 
 def chain_gen(iterables):
-    """A generator that chains `iterables`."""
+    """A generator that chains iterables."""
     for iterable in iterables:
         for item in iterable:
             yield item
@@ -93,16 +89,11 @@ class Filter(object):
     """Represents a Filter for a specific field and its value.
     Filters are used on queries to narrow down the set of matching objects.
 
-    Args:
-        field: the attribute name (string) on which to apply the filter.
+    :param field:  the attribute name (string) on which to apply the filter
+    :param op:     one of ['<', '<=', '=', '!=', '>=', '>'] conditional operators
+    :param value:  the attribute value to compare against
 
-        op: the conditional operator to apply (one of
-            ['<', '<=', '=', '!=', '>=', '>']).
-
-        value: the attribute value to compare against.
-
-    Examples::
-
+    e.g.
         Filter('name', '=', 'John Cleese')
         Filter('age', '>=', 18)
     """
@@ -150,10 +141,12 @@ class Filter(object):
         return '{} {} {}'.format(self.field, self.op, self.value)
 
     def __repr__(self):
-        return "Filter('{!s}', '{!s}', {!r})".format(self.field, self.op, self.value)
+        return "Filter({!r}, {!r}, {!r})".format(self.field, self.op, self.value)
 
-    def __eq__(self, o):
-        return self.field == o.field and self.op == o.op and self.value == o.value
+    def __eq__(self, other):
+        return self.field == other.field \
+            and self.op == other.op \
+            and self.value == other.value
 
     def __ne__(self, other):
         return not self.__eq__(other)
@@ -162,14 +155,14 @@ class Filter(object):
         return hash(repr(self))
 
     def generator(self, iterable):
-        """Generator function that iteratively filters given `items`."""
+        """Generator function that iteratively filters given items."""
         for item in iterable:
             if self(item):
                 yield item
 
     @classmethod
     def filter(cls, filters, iterable):
-        """Returns the elements in `iterable` that pass given `filters`"""
+        """Returns the elements in iterable that pass given filters"""
         if isinstance(filters, Filter):
             filters = [filters]
 
@@ -186,26 +179,26 @@ class Order(object):
     :param order: an order in string form. This follows the format: [+-]name
                   where + is ascending, - is descending, and name is the name
                   of the field to order by.
-                  Note: if no ordering operator is specified, + is default.
 
     Examples:
 
-        Order('+name')   #  ascending order by name
-        Order('-age')    # descending order by age
-        Order('score')   #  ascending order by score
-
+        Order('+name')      #  ascending order by name
+        Order('-age')       #  descending order by age
+        Order('+score')     #  ascending order by score
     """
     order_operators = ['-', '+']
     object_getattr = staticmethod(_object_getattr)
 
     def __init__(self, order):
         if order[0] not in self.order_operators:
-            raise ValueError("{}' is not a valid Order Operator.".format(self.op))
+            raise ValueError("{} order operator must be one of '+' or '-'".format(order[0]))
+
         self.op = order[0]
+
         try:
             self.field = order[1:]
         except IndexError:
-            raise ValueError("Order input be at least two characters long and start with '+' or '-'")
+            raise ValueError("specified field must be at least two characters")
 
     def __str__(self):
         return "{}{}".format(self.op, self.field)
@@ -223,11 +216,7 @@ class Order(object):
         return hash(repr(self))
 
     @property
-    def isAscending(self):
-        return self.op == '+'
-
-    @property
-    def isDescending(self):
+    def descending(self):
         return self.op == '-'
 
     def keyfn(self, obj):
@@ -235,23 +224,16 @@ class Order(object):
         return self.object_getattr(obj, self.field)
 
     @classmethod
-    def multipleOrderComparison(cls, orders):
-        """Returns a function that will compare two items according to `orders`"""
-        comparers = [ (o.keyfn, 1 if o.isAscending else -1) for o in orders]
-
-        def cmpfn(a, b):
-            for keyfn, ascOrDesc in comparers:
-                comparison = cmp(keyfn(a), keyfn(b)) * ascOrDesc
-                if comparison is not 0:
-                    return comparison
-            return 0
-
-        return cmpfn
+    def sort_step(cls, items, order):
+        #what is items aren't dicts as in tests
+        return sorted(items, key=itemgetter(order.field), reverse=order.descending)
 
     @classmethod
-    def osorted(cls, items, orders):
-        """Returns the elements in `items` sorted according to `orders`"""
-        return sorted(items, key=cmp_to_key(cls.multipleOrderComparison(orders)))
+    def sort_orders(cls, items, orders):
+        """Returns the elements in items sorted according to orders"""
+        for o in orders:
+            items = cls.sort_step(items, o)
+        return items
 
 
 class Query(object):
@@ -265,17 +247,15 @@ class Query(object):
     #Object attribute getter. Can be overridden to match client data model.
     object_getattr = staticmethod(_object_getattr)
 
-    def __init__(self, key=Key('/'), **kwargs):
+    def __init__(self, key=Key('/'), object_getattr=None, **kwargs):
         self.key = self.check_key(key)
+        if object_getattr:
+            self.object_getattr = object_getattr
         self.limit = self.check_limit(kwargs.get('limit', None))
-        print(self.limit)
         self.offset = int(kwargs.get('offset', 0))
         self.offset_key = kwargs.get('offset_key', None)
-
         self.filters = []
         self.orders = []
-
-        self.object_getattr = kwargs.get('object_getattr', self.object_getattr)
 
     def check_key(self, key):
         if isinstance(key, Key):
@@ -295,7 +275,7 @@ class Query(object):
 
     def __repr__(self):
         """Returns the representation of this query. Enables eval(repr(.))."""
-        return 'Query.from_dict({!s})'.format(self.dict())
+        return 'Query.from_dict({!s})'.format(self.to_dict())
 
     def __call__(self, iterable):
         """Naively apply this query on an iterable of objects.
@@ -316,7 +296,10 @@ class Query(object):
         cursor.apply_limit()
         return cursor
 
-    def order(self, order):
+    def __hash__(self):
+        return hash(repr(self))
+
+    def add_order(self, order):
         """Adds an Order to this query.
 
         Args:
@@ -334,44 +317,31 @@ class Query(object):
         self.orders.append(order)
         return self # for chaining
 
-    def filter(self, *args):
-        """Adds a Filter to this query.
+    def add_filter(self, *args):
+        """Adds a Filter to this query. Returns self, and is chainable.
 
-        Args:
-        see :py:class:`Filter <datastore.query.Filter>` constructor
+        :py:class:`Filter <datastore.query.Filter>` constructor
 
-        Returns self for JS-like method chaining::
+        e.g.
 
-        query.filter('age', '>', 18).filter('sex', '=', 'Female')
-
+            query.filter('age', '>', 18).filter('sex', '=', 'Female')
         """
         if len(args) == 1 and isinstance(args[0], Filter):
-            filter = args[0]
+            f = args[0]
         else:
-            filter = Filter(*args)
+            f = Filter(*args)
 
-        # ensure filter gets attr values the same way the rest of the query does.
-        filter.object_getattr = self.object_getattr
-        self.filters.append(filter)
-        return self # for chaining
+        f.object_getattr = self.object_getattr
 
-    def __cmp__(self, other):
-        return cmp(self.dict(), other.dict())
+        self.filters.append(f)
 
-    def __hash__(self):
-        return hash(repr(self))
+        return self
 
     def copy(self):
         """Returns a copy of this query."""
-        return Query(self.key,
-                     limit = self.limit,
-                     offset = self.offset,
-                     offset_key = self.offset_key,
-                     filters = self.filters,
-                     orders = self.orders,
-                     object_getattr=self.object_getattr)
+        return copy(self)
 
-    def dict(self):
+    def to_dict(self):
         """Returns a dictionary representing this query."""
         d = dict()
         d['key'] = str(self.key)
@@ -397,12 +367,12 @@ class Query(object):
         for key, value in dictionary.items():
             if key == 'order':
                 for order in value:
-                    query.order(order)
+                    query.add_order(order)
             elif key == 'filter':
-                for filter in value:
-                    if not isinstance(filter, Filter):
-                        filter = Filter(*filter)
-                    query.filter(filter)
+                for f in value:
+                    if not isinstance(f, Filter):
+                        f = Filter(*f)
+                    query.add_filter(f)
             elif key in ['limit', 'offset', 'offset_key']:
                 setattr(query, key, value)
         return query
@@ -477,8 +447,7 @@ class Cursor(object):
         self._ensure_modification_is_safe()
 
         if len(self.query.orders) > 0:
-            self._iterable = Order.osorted(self._iterable, self.query.orders)
-        # not a generator :(
+            self._iterable = Order.sort_orders(self._iterable, self.query.orders)
 
     def apply_offset(self):
         """Naively apply query offset."""

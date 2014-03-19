@@ -37,7 +37,7 @@ setup(
   namespace_packages=['datastore'],
   install_requires=['smhasher>=0.150.1'],
   test_suite='datastore.test',
-  tests_require=['nanotime', 'bson'],
+  tests_require=['nanotime', 'pymongo'],
   license='MIT License',
   classifiers=[
     'Topic :: Database',

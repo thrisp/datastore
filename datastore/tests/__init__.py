@@ -209,7 +209,7 @@ class TestQuery(TestCase):
         sr1['parent'] = '0000000000000000000000000000000000000000'
         sr1['created'] = nanotime.now().nanoseconds()
         sr1['committed'] = nanotime.now().nanoseconds()
-        sr1['attributes'] = {'str' : {'value' : 'herp'} }
+        sr1['attributes'] = {'str' : {'value' : 'herp'}, 'version':'1' }
         sr1['type'] = 'Hurr'
 
         sr2 = {}
@@ -218,7 +218,7 @@ class TestQuery(TestCase):
         sr2['parent'] = hashlib.sha1('herp'.encode('utf-8')).hexdigest()
         sr2['created'] = nanotime.now().nanoseconds()
         sr2['committed'] = nanotime.now().nanoseconds()
-        sr2['attributes'] = {'str' : {'value' : 'derp'} }
+        sr2['attributes'] = {'str' : {'value' : 'derp'}, 'version': '2' }
         sr2['type'] = 'Hurr'
 
         sr3 = {}
@@ -227,7 +227,7 @@ class TestQuery(TestCase):
         sr3['parent'] = hashlib.sha1('derp'.encode('utf-8')).hexdigest()
         sr3['created'] = nanotime.now().nanoseconds()
         sr3['committed'] = nanotime.now().nanoseconds()
-        sr3['attributes'] = {'str' : {'value' : 'lerp'} }
+        sr3['attributes'] = {'str' : {'value' : 'lerp'}, 'version': '3' }
         sr3['type'] = 'Hurr'
 
         return sr1, sr2, sr3

@@ -1,4 +1,4 @@
-'''
+"""
 Hello Tiered Access
 
     >>> import pymongo
@@ -43,5 +43,23 @@ Hello Sharding
     >>> ds.delete(hello)
     >>> ds.get(hello)
     None
+"""
+"""
+serialize Hello World
 
+    >>> import datastore.core
+    >>> import json
+    >>>
+    >>> ds_child = datastore.DictDatastore()
+    >>> ds = datastore.serialize.shim(ds_child, json)
+    >>>
+    >>> hello = datastore.Key('hello')
+    >>> ds.put(hello, 'world')
+    >>> ds.contains(hello)
+    True
+    >>> ds.get(hello)
+    'world'
+    >>> ds.delete(hello)
+    >>> ds.get(hello)
+    None
 """

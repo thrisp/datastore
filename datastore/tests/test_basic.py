@@ -29,7 +29,7 @@ class TestCacheShimDatastore(TestDatastore):
         # make sure the cache is used
         s1 = CacheShimDatastore(NullMinusQueryDatastore(), cache=DictDatastore())
 
-        # make sure the cache is not relief upon
+        # make sure the cache ?(is not relief upon)
         s2 = CacheShimDatastore(DictDatastore(), cache=NullDatastore())
 
         # make sure the cache works in tandem
@@ -53,7 +53,7 @@ class TestLoggingDatastore(TestDatastore):
         s2 = LoggingDatastore(DictDatastore())
         self.subtest_simple([s1, s2])
 
-"""
+
 class TestKeyTransformDatastore(TestDatastore):
     def test_simple(self):
         from ..basic import KeyTransformDatastore
@@ -223,7 +223,7 @@ class TestNamespaceDatastore(TestDatastore):
 
         for i in range(0, 10):
             test(Key(str(i)), 'val{}'.format(i))
-"""
+
 
 class TestNestedPathDatastore(TestDatastore):
     def test_simple(self):
@@ -471,7 +471,7 @@ class TestSymlinkDatastore(TestDatastore):
         self.assertEqual(dds.get(b), lva)
 
         self.assertEqual(sds_query(), [1, 1])
-        self.assertIn([lva, 1], dds_query()) #self.assertEqual(dds_query(), [lva, 1])
+        self.assertEqual(dds_query(), [lva, 1])
 
         # changing link should affect source
         sds.put(b, 2)
@@ -806,7 +806,7 @@ class TestDatastoreCollection(TestDatastore):
 
     def test_sharded(self, numelems=1000):
         # the numerous casts of int are incredibly painful
-        # otherwise you end up passing a float
+        # otherwise you end up passing a float, so that is an issue to work on
         from ..basic import ShardedDatastore
 
         stores = []
@@ -927,4 +927,4 @@ class TestDatastoreCollection(TestDatastore):
 
 
 if __name__ == '__main__':
-  unittest.main()
+    unittest.main()
