@@ -1,6 +1,5 @@
 from copy import copy
 from functools import total_ordering
-from operator import itemgetter
 
 from .key import Key
 
@@ -225,8 +224,7 @@ class Order(object):
 
     @classmethod
     def sort_step(cls, items, order):
-        #what is items aren't dicts as in tests
-        return sorted(items, key=itemgetter(order.field), reverse=order.descending)
+        return sorted(items, key=order.keyfn, reverse=order.descending)
 
     @classmethod
     def sort_orders(cls, items, orders):
@@ -302,15 +300,14 @@ class Query(object):
     def add_order(self, order):
         """Adds an Order to this query.
 
-        Args:
         see :py:class:`Order <datastore.query.Order>` constructor
 
-        Returns self for JS-like method chaining::
+        Returns self for method chaining:
 
-        query.order('+age').order('-home')
-
+            query.order('+age').order('-home')
         """
-        order = order if isinstance(order, Order) else Order(order)
+        if not isinstance(order, Order):
+            order = Order(order)
 
         # ensure order gets attr values the same way the rest of the query does.
         order.object_getattr = self.object_getattr

@@ -119,6 +119,8 @@ class FileSystemDatastore(datastore.Datastore):
 
         with open(path, 'w') as f:
             f.write(value)
+            f.flush()
+            os.fdatasync(f.fileno())
 
     def _read_object(self, path):
         """read in object from file at path"""

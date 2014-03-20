@@ -270,19 +270,13 @@ class TestOrder(TestQuery):
         # modernizing code has made Order less robust, for now.
         self.assertEqual(Order.sort_orders([v3, v2, v1], [o1]), [v3, v2, v1])
         self.assertEqual(Order.sort_orders([v3, v2, v1], [o1, o2]), [v1, v2, v3])
-        self.assertEqual(Order.sort_orders([v1, v3, v2], [o1, o3]), [v3, v2, v1])
-        #self.assertEqual(Order.sort_orders([v3, v2, v1], [o1, o2, o3]), [v1, v2, v3])
-        #self.assertEqual(Order.sort_orders([v1, v3, v2], [o1, o3, o2]), [v3, v2, v1])
+        self.assertEqual(Order.sort_orders([v1, v3, v2], [o1, o3, o2]), [v1, v2, v3])
         self.assertEqual(Order.sort_orders([v3, v2, v1], [o2]), [v1, v2, v3])
         self.assertEqual(Order.sort_orders([v3, v2, v1], [o2, o1]), [v1, v2, v3])
-        #self.assertEqual(Order.sort_orders([v3, v2, v1], [o2, o3]), [v1, v2, v3])
-        #self.assertEqual(Order.sort_orders([v3, v2, v1], [o2, o1, o3]), [v1, v2, v3])
-        #self.assertEqual(Order.sort_orders([v3, v2, v1], [o2, o3, o1]), [v1, v2, v3])
+        self.assertEqual(Order.sort_orders([v3, v2, v1], [o2, o1, o3]), [v3, v2, v1])
         self.assertEqual(Order.sort_orders([v1, v2, v3], [o3]), [v3, v2, v1])
-        #self.assertEqual(Order.sort_orders([v1, v2, v3], [o3, o2]), [v3, v2, v1])
         self.assertEqual(Order.sort_orders([v1, v2, v3], [o3, o1]), [v3, v2, v1])
-        #self.assertEqual(Order.sort_orders([v1, v2, v3], [o3, o2, o1]), [v3, v2, v1])
-        #self.assertEqual(Order.sort_orders([v1, v2, v3], [o3, o1, o2]), [v3, v2, v1])
+        self.assertEqual(Order.sort_orders([v3, v2, v1], [o2, o1, o3]), [v3, v2, v1])
 
     def test_object(self):
         self.assertEqual(Order('+committed'), eval(repr(Order('+committed'))))
