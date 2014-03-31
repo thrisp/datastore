@@ -2,18 +2,22 @@ from unittest import TestCase
 
 import hashlib
 import nanotime
+import random
 
 from ..key import Key
 from ..query import Query
 
 
 class TestKey(TestCase):
-    def randomString(self):
+    def random_string(self):
         string = ''
         length = random.randint(0, 50)
         for i in range(0, length):
             string += chr(random.randint(ord('0'), ord('Z')))
         return string
+
+    def random_key(self):
+        return Key('/herp/' + self.random_string() + '/derp')
 
     def subtest_basic(self, string):
         fixedString = Key.removeDuplicateSlashes(string)
@@ -23,7 +27,7 @@ class TestKey(TestCase):
         path = fixedString.rsplit('/', 1)[0] + '/' + ktype
         instance = fixedString + ':' + 'c'
 
-        self.assertEqual(Key(string)._string, fixedString)
+        self.assertEqual(Key(string)._kstring, fixedString)
         self.assertEqual(Key(string), Key(string))
         self.assertEqual(str(Key(string)), fixedString)
         self.assertEqual(repr(Key(string)), "Key('%s')" % fixedString)
@@ -33,11 +37,12 @@ class TestKey(TestCase):
         self.assertEqual(Key(string).path, Key(path))
         self.assertEqual(Key(string), eval(repr(Key(string))))
 
-        self.assertTrue(Kiey(string).child('a') > Key(string))
+        self.assertTrue(Key(string).child('a') > Key(string))
         self.assertTrue(Key(string).child('a') < Key(string).child('b'))
         self.assertTrue(Key(string) == Key(string))
 
-        self.assertRaises(TypeError, cmp, Key(string), string)
+        with self.assertRaises(TypeError):
+            Key(string) > string
 
         split = fixedString.split('/')
         if len(split) > 1:

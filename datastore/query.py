@@ -12,7 +12,7 @@ def _object_getattr(obj, field):
     specified, and the system can remain agnostic to the client's data model,
     without losing query power.
 
-    For example, the default implementation works with attributes and items:
+    For example, the default implementation works with attributes and items::
 
         def _object_getattr(obj, field):
             # check whether this key is an attribute
@@ -26,7 +26,7 @@ def _object_getattr(obj, field):
             # return whatever we've got.
             return value
 
-    Or consider a more application-specific use-case:
+    Or consider a more application-specific use-case::
 
         def _object_getattr(version, field):
             if field in ['key', 'committed', 'created', 'hash']:
@@ -92,7 +92,7 @@ class Filter(object):
     :param op:     one of ['<', '<=', '=', '!=', '>=', '>'] conditional operators
     :param value:  the attribute value to compare against
 
-    e.g.
+    e.g.::
         Filter('name', '=', 'John Cleese')
         Filter('age', '>=', 18)
     """
@@ -179,7 +179,7 @@ class Order(object):
                   where + is ascending, - is descending, and name is the name
                   of the field to order by.
 
-    Examples:
+    Examples::
 
         Order('+name')      #  ascending order by name
         Order('-age')       #  descending order by age
@@ -302,7 +302,7 @@ class Query(object):
 
         see :py:class:`Order <datastore.query.Order>` constructor
 
-        Returns self for method chaining:
+        Returns self for method chaining::
 
             query.order('+age').order('-home')
         """
@@ -319,7 +319,7 @@ class Query(object):
 
         :py:class:`Filter <datastore.query.Filter>` constructor
 
-        e.g.
+        e.g.::
 
             query.filter('age', '>', 18).filter('sex', '=', 'Female')
         """

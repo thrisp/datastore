@@ -23,3 +23,6 @@ nosetests.xml
 .project
 .pydevproject
 *.manifest
+.ropeproject
+.coverage
+.cache

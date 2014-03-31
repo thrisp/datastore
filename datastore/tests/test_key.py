@@ -1,5 +1,4 @@
 from unittest import TestCase
-import random
 
 from datastore.key import Key
 from datastore.key import Namespace
@@ -25,8 +24,8 @@ class KeyTest(TestKey):
         k1 = Key('/A/B/C')
         k2 = Key('/A/B/C/D')
 
-        self.assertEqual(k1._string, '/A/B/C')
-        self.assertEqual(k2._string, '/A/B/C/D')
+        self.assertEqual(k1._kstring, '/A/B/C')
+        self.assertEqual(k2._kstring, '/A/B/C/D')
         self.assertTrue(k1.isAncestorOf(k2))
         self.assertTrue(k2.isDescendantOf(k1))
         self.assertTrue(Key('/A').isAncestorOf(k2))
@@ -55,15 +54,13 @@ class KeyTest(TestKey):
         self.assertEqual(k1.type, k2.parent.type)
 
     def test_hashing(self):
-        def randomKey():
-            return Key('/herp/' + self.random_string() + '/derp')
 
         keys = {}
 
         for i in range(0, 200):
-            key = randomKey()
+            key = self.random_key()
             while key in keys.values():
-                key = randomKey()
+                key = self.random_key()
 
             hstr = str(hash(key))
             self.assertFalse(hstr in keys)
@@ -77,7 +74,7 @@ class KeyTest(TestKey):
     def test_random(self):
         keys = set()
         for i in range(0, 1000):
-            random = Key.randomKey()
+            random = Key.random_key()
             self.assertFalse(random in keys)
             keys.add(random)
         self.assertEqual(len(keys), 1000)
