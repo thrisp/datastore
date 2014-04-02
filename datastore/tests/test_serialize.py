@@ -1,14 +1,22 @@
 import unittest
 
-from datastore.key import Key
-from datastore.basic import DictDatastore
-from datastore.serialize import *
+import json
+
+from datastore.core.key import Key
+from datastore.core.stores import DictDatastore
+from datastore.core.serialize import (default_serializer, Serializer,
+                                      NonSerializer, prettyjson, Stack,
+                                      MapSerializer, serialized_gen,
+                                      deserialized_gen, monkey_patch_bson,
+                                      SerializerShimDatastore)
+
 from . import TestDatastore
 
 import pickle
 import bson
 
 monkey_patch_bson(bson)
+
 
 class TestSerialize(TestDatastore):
     def test_basic(self):
@@ -61,7 +69,7 @@ class TestSerialize(TestDatastore):
             self.assertTrue(shim.contains(key))
             self.assertEqual(shim.get(key), value)
 
-            # make sure underlying DictDatastore is storing the serialized value.
+            # make sure DictDatastore used is storing the serialized value.
             self.assertEqual(shim.child_datastore.get(key), value_serialized)
 
             # delete (should not be there)
@@ -69,7 +77,7 @@ class TestSerialize(TestDatastore):
             self.assertFalse(shim.contains(key))
             self.assertEqual(shim.get(key), None)
 
-            # make sure manipulating underlying DictDatastore works equally well.
+            # make sure manipulating used DictDatastore works equally well.
             shim.child_datastore.put(key, value_serialized)
             self.assertTrue(shim.contains(key))
             self.assertEqual(shim.get(key), value)
@@ -78,7 +86,7 @@ class TestSerialize(TestDatastore):
             self.assertFalse(shim.contains(key))
             self.assertEqual(shim.get(key), None)
 
-        #if serializer is not bson: # bson can't handle non mapping types
+        # if serializer is not bson: # bson can't handle non mapping types
         #    self.subtest_simple([shim], numelems)
 
     def test_serializer_shim(self):
@@ -87,20 +95,24 @@ class TestSerialize(TestDatastore):
         self.subtest_serializer_shim(pickle)
         self.subtest_serializer_shim(MapSerializer)
         self.subtest_serializer_shim(bson)
-        self.subtest_serializer_shim(default_serializer) # module default
+        self.subtest_serializer_shim(default_serializer)  # module default
 
         self.subtest_serializer_shim(Stack([MapSerializer]))
         self.subtest_serializer_shim(Stack([MapSerializer, bson]))
         self.subtest_serializer_shim(Stack([json, MapSerializer, bson]))
-        self.subtest_serializer_shim(Stack([json, MapSerializer, bson, pickle]))
+        self.subtest_serializer_shim(Stack([json, MapSerializer, bson,
+                                            pickle]))
 
     def test_has_interface_check(self):
         self.assertTrue(hasattr(Serializer, 'implements_serializer_interface'))
 
     def test_interface_check_returns_true_for_valid_serializers(self):
         class S(object):
-            def loads(self, foo): return foo
-            def dumps(self, foo): return foo
+            def loads(self, foo):
+                return foo
+
+            def dumps(self, foo):
+                return foo
 
         self.assertTrue(Serializer.implements_serializer_interface(S))
         self.assertTrue(Serializer.implements_serializer_interface(json))

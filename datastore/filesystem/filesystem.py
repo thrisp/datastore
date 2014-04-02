@@ -1,5 +1,5 @@
 import os
-import datastore
+from datastore.core.stores import Datastore
 
 
 def ensure_directory_exists(directory):
@@ -9,10 +9,11 @@ def ensure_directory_exists(directory):
     if not os.path.exists(directory):
         os.makedirs(directory)
     elif os.path.isfile(directory):
-        raise RuntimeError('Path {} is a file, not a directory.'.format(directory))
+        raise RuntimeError("""Path {} is a file, not a directory.
+                           """.format(directory))
 
 
-class FileSystemDatastore(datastore.Datastore):
+class FileSystemDatastore(Datastore):
     """Simple flat-file datastore.
 
     FileSystemDatastore will store objects in independent files in the host's

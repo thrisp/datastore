@@ -4,8 +4,8 @@ import hashlib
 import nanotime
 import random
 
-from ..key import Key
-from ..query import Query
+from datastore.core.key import Key
+from datastore.core.query import Query
 
 
 class TestKey(TestCase):

@@ -1,7 +1,7 @@
 from unittest import TestCase
 
-from datastore.key import Key
-from datastore.key import Namespace
+from datastore.core.key import Key
+from datastore.core.key import Namespace
 
 from . import TestKey
 

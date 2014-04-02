@@ -1,5 +1,5 @@
 import json
-from .basic import Datastore, ShimDatastore
+from .stores import ShimDatastore
 
 
 default_serializer = json
@@ -54,7 +54,7 @@ class prettyjson(Serializer):
 
 
 class Stack(Serializer, list):
-    """represents a stack of serializers, applying each serializer in sequence."""
+    """represents a stack of serializers, applying each in sequence."""
     def loads(self, value):
         """Returns deserialized value."""
         for serializer in reversed(self):
@@ -82,7 +82,8 @@ class MapSerializer(Serializer):
     @classmethod
     def dumps(cls, value):
         """returns mapping typed serialized value."""
-        if not hasattr(value, '__getitem__') or not hasattr(value, 'iteritems'):
+        if not hasattr(value, '__getitem__') or \
+                not hasattr(value, 'iteritems'):
             value = {cls.sentinel: value}
         return value
 
@@ -133,9 +134,10 @@ class SerializerShimDatastore(ShimDatastore):
             self.serializer = serializer
 
         # ensure serializer works
-        test = { 'value': repr(self) }
+        test = {'value': repr(self)}
         errstr = 'Serializer error: serialized value does not match original'
-        assert self.serializer.loads(self.serializer.dumps(test)) == test, errstr
+        val = self.serializer.dumps(test)
+        assert self.serializer.loads(val) == test, errstr
 
     def serializedValue(self, value):
         """Returns serialized value or None."""
@@ -194,5 +196,3 @@ def shim(datastore, serializer=None):
         my_store = datastore.serialize.shim(my_store, json)
     """
     return SerializerShimDatastore(datastore, serializer=serializer)
-
-

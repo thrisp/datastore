@@ -1,8 +1,8 @@
 import logging
 
-from datastore.basic import DictDatastore
-from datastore.key import Key
-from datastore.query import Query
+from datastore.core.stores import DictDatastore
+from datastore.core.key import Key
+from datastore.core.query import Query
 
 from . import TestDatastore
 
@@ -19,8 +19,8 @@ class TestDictionaryDatastore(TestDatastore):
 
 class TestCacheShimDatastore(TestDatastore):
     def test_simple(self):
-        from ..basic import CacheShimDatastore
-        from ..basic import NullDatastore
+        from datastore.core.stores import CacheShimDatastore
+        from datastore.core.stores import NullDatastore
 
         class NullMinusQueryDatastore(NullDatastore):
             def query(self, query):
@@ -40,7 +40,7 @@ class TestCacheShimDatastore(TestDatastore):
 
 class TestLoggingDatastore(TestDatastore):
     def test_simple(self):
-        from ..basic import LoggingDatastore
+        from datastore.core.stores import LoggingDatastore
 
         class NullLogger(logging.getLoggerClass()):
             def debug(self, *args, **kwargs): pass
@@ -56,7 +56,7 @@ class TestLoggingDatastore(TestDatastore):
 
 class TestKeyTransformDatastore(TestDatastore):
     def test_simple(self):
-        from ..basic import KeyTransformDatastore
+        from datastore.core.stores import KeyTransformDatastore
 
         s1 = KeyTransformDatastore(DictDatastore())
         s2 = KeyTransformDatastore(DictDatastore())
@@ -66,7 +66,7 @@ class TestKeyTransformDatastore(TestDatastore):
         self.subtest_simple(stores)
 
     def test_reverse_transform(self):
-        from ..basic import KeyTransformDatastore
+        from datastore.core.stores import KeyTransformDatastore
 
         def transform(key):
             return key.reverse
@@ -106,7 +106,7 @@ class TestKeyTransformDatastore(TestDatastore):
         self.assertFalse(kt.contains(k2))
 
     def test_lowercase_transform(self):
-        from ..basic import KeyTransformDatastore
+        from datastore.core.stores import KeyTransformDatastore
 
         def transform(key):
             return Key(str(key).lower())
@@ -142,7 +142,7 @@ class TestKeyTransformDatastore(TestDatastore):
 
 class TestLowercaseKeyDatastore(TestDatastore):
     def test_simple(self):
-        from ..basic import LowercaseKeyDatastore
+        from datastore.core.stores import LowercaseKeyDatastore
 
         s1 = LowercaseKeyDatastore(DictDatastore())
         s2 = LowercaseKeyDatastore(DictDatastore())
@@ -151,7 +151,7 @@ class TestLowercaseKeyDatastore(TestDatastore):
         self.subtest_simple(stores)
 
     def test_lowercase(self):
-        from ..basic import LowercaseKeyDatastore
+        from datastore.core.stores import LowercaseKeyDatastore
 
         ds = DictDatastore()
         lds = LowercaseKeyDatastore(ds)
@@ -184,7 +184,7 @@ class TestLowercaseKeyDatastore(TestDatastore):
 
 class TestNamespaceDatastore(TestDatastore):
     def test_simple(self):
-        from ..basic import NamespaceDatastore
+        from datastore.core.stores import NamespaceDatastore
 
         s1 = NamespaceDatastore(Key('a'), DictDatastore())
         s2 = NamespaceDatastore(Key('b'), DictDatastore())
@@ -194,7 +194,7 @@ class TestNamespaceDatastore(TestDatastore):
         self.subtest_simple(stores)
 
     def test_namespace(self):
-        from ..basic import NamespaceDatastore
+        from datastore.core.stores import NamespaceDatastore
 
         k1 = Key('/c/d')
         k2 = Key('/a/b')
@@ -227,7 +227,7 @@ class TestNamespaceDatastore(TestDatastore):
 
 class TestNestedPathDatastore(TestDatastore):
     def test_simple(self):
-        from ..basic import NestedPathDatastore
+        from datastore.core.stores import NestedPathDatastore
 
         s1 = NestedPathDatastore(DictDatastore())
         s2 = NestedPathDatastore(DictDatastore(), depth=2)
@@ -238,7 +238,7 @@ class TestNestedPathDatastore(TestDatastore):
         self.subtest_simple(stores)
 
     def test_nested_path(self):
-        from ..basic import NestedPathDatastore
+        from datastore.core.stores import NestedPathDatastore
 
         nested_path = NestedPathDatastore.nestedPath
 
@@ -253,7 +253,7 @@ class TestNestedPathDatastore(TestDatastore):
         test(3, 10, 'abcdefghij/k')
 
     def subtest_nested_path_ds(self, **kwargs):
-        from ..basic import NestedPathDatastore
+        from datastore.core.stores import NestedPathDatastore
 
         k1 = kwargs.pop('k1')
         k2 = kwargs.pop('k2')
@@ -372,7 +372,7 @@ class TestNestedPathDatastore(TestDatastore):
 
 class TestSymlinkDatastore(TestDatastore):
     def test_simple(self):
-        from ..basic import SymlinkDatastore
+        from datastore.core.stores import SymlinkDatastore
 
         s1 = SymlinkDatastore(DictDatastore())
         s2 = SymlinkDatastore(DictDatastore())
@@ -383,7 +383,7 @@ class TestSymlinkDatastore(TestDatastore):
         self.subtest_simple(stores)
 
     def test_symlink_basic(self):
-        from ..basic import SymlinkDatastore
+        from datastore.core.stores import SymlinkDatastore
 
         dds = DictDatastore()
         sds = SymlinkDatastore(dds)
@@ -422,7 +422,7 @@ class TestSymlinkDatastore(TestDatastore):
         self.assertNotEqual(sds.get(b), sds.get(a))
 
     def test_symlink_internals(self):
-        from ..basic import SymlinkDatastore
+        from datastore.core.stores import SymlinkDatastore
 
         dds = DictDatastore()
         sds = SymlinkDatastore(dds)
@@ -570,7 +570,7 @@ class TestSymlinkDatastore(TestDatastore):
         self.assertRaises(AssertionError, sds.link, d, a)
 
     def test_symlink_recursive(self):
-        from ..basic import SymlinkDatastore
+        from datastore.core.stores import SymlinkDatastore
 
         dds = DictDatastore()
         sds1 = SymlinkDatastore(dds)
@@ -626,14 +626,14 @@ class TestSymlinkDatastore(TestDatastore):
 
 class TestDirectoryDatastore(TestDatastore):
     def test_simple(self):
-        from ..basic import DirectoryDatastore
+        from datastore.core.stores import DirectoryDatastore
 
         s1 = DirectoryDatastore(DictDatastore())
         s2 = DirectoryDatastore(DictDatastore())
         self.subtest_simple([s1, s2])
 
     def test_directory_init(self):
-        from ..basic import DirectoryDatastore
+        from datastore.core.stores import DirectoryDatastore
 
         ds = DirectoryDatastore(DictDatastore())
 
@@ -653,7 +653,7 @@ class TestDirectoryDatastore(TestDatastore):
         self.assertEqual(ds.get(dir_key), [str(bar_key)])
 
     def test_directory_simple(self):
-        from ..basic import DirectoryDatastore
+        from datastore.core.stores import DirectoryDatastore
 
         ds = DirectoryDatastore(DictDatastore())
 
@@ -684,7 +684,7 @@ class TestDirectoryDatastore(TestDatastore):
             next(gen)#gen.__next__()
 
     def test_directory_double_add(self):
-        from ..basic import DirectoryDatastore
+        from datastore.core.stores import DirectoryDatastore
 
         ds = DirectoryDatastore(DictDatastore())
 
@@ -706,7 +706,7 @@ class TestDirectoryDatastore(TestDatastore):
         self.assertEqual(keys, [bar_key, baz_key])
 
     def test_directory_remove(self):
-        from ..basic import DirectoryDatastore
+        from datastore.core.stores import DirectoryDatastore
 
         ds = DirectoryDatastore(DictDatastore())
 
@@ -732,7 +732,7 @@ class TestDirectoryDatastore(TestDatastore):
 
 class TestDirectoryTreeDatastore(TestDatastore):
     def test_simple(self):
-        from ..basic import DirectoryTreeDatastore
+        from datastore.core.stores import DirectoryTreeDatastore
 
         s1 = DirectoryTreeDatastore(DictDatastore())
         s2 = DirectoryTreeDatastore(DictDatastore())
@@ -741,7 +741,7 @@ class TestDirectoryTreeDatastore(TestDatastore):
 
 class TestDatastoreCollection(TestDatastore):
     def test_tiered(self):
-        from ..basic import TieredDatastore
+        from datastore.core.stores import TieredDatastore
 
         s1 = DictDatastore()
         s2 = DictDatastore()
@@ -807,7 +807,7 @@ class TestDatastoreCollection(TestDatastore):
     def test_sharded(self, numelems=1000):
         # the numerous casts of int are incredibly painful
         # otherwise you end up passing a float, so that is an issue to work on
-        from ..basic import ShardedDatastore
+        from datastore.core.stores import ShardedDatastore
 
         stores = []
         for i in range(5):

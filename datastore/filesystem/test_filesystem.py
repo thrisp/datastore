@@ -3,7 +3,7 @@ import os
 import shutil
 import unittest
 
-from datastore import serialize
+from datastore.core import serialize
 from datastore.tests import TestDatastore
 
 from . import FileSystemDatastore
