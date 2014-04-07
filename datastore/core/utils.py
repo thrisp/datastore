@@ -1,6 +1,5 @@
-import smhasher
+import hashlib
 
 
 def makehash(tohash):
-    '''fast, deterministic hash function'''
-    return smhasher.murmur3_x86_64(str(tohash))
+    return int(hashlib.sha1(str(tohash).encode('utf-8')).hexdigest(), 16)

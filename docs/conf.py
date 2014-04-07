@@ -244,7 +244,6 @@ MOCK_MODULES = [
   'redis',
   'pylru',
   'dulwich',
-  'smhasher'
 ]
 
 for mod_name in MOCK_MODULES:

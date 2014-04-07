@@ -546,7 +546,7 @@ class TestSymlinkDatastore(TestDatastore):
         self.assertEqual(dds.get(c), lva)
 
         self.assertEqual(sds_query(), [3, 3, 3])
-        self.assertEqual(dds_query(), [lva, 3, lva])
+        self.assertEqual(dds_query(), [lva, lva, 3])
 
         # linking should be transitive
         sds.link(b, c)
